@@ -18,6 +18,9 @@ package com.baidu.fsg.uid.utils;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
+ *
+ * 这边借鉴了TransferQueue的设计思路，优化了缓存列效率问题，fixme 不过对于32位的机器，这个需要进行调整？
+ *
  * Represents a padded {@link AtomicLong} to prevent the FalseSharing problem<p>
  * 
  * The CPU cache line commonly be 64 bytes, here is a sample of cache line after padding:<br>
