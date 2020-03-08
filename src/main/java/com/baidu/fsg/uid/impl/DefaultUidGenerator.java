@@ -30,6 +30,8 @@ import com.baidu.fsg.uid.utils.DateUtils;
 import com.baidu.fsg.uid.worker.WorkerIdAssigner;
 
 /**
+ *
+ * 需要依赖于spring容器
  * Represents an implementation of {@link UidGenerator}
  *
  * The unique id has 64bits (long), default allocated as blow:<br>
@@ -37,6 +39,7 @@ import com.baidu.fsg.uid.worker.WorkerIdAssigner;
  * <li>delta seconds: The next 28 bits, represents delta seconds since a customer epoch(2016-05-20 00:00:00.000).
  *                    Supports about 8.7 years until to 2024-11-20 21:24:16
  * <li>worker id: The next 22 bits, represents the worker's id which assigns based on database, max id is about 420W
+ *                fixme 这部分是依赖于数据，是否有性能问题？ 从sequence这部分的性能来看，性能瓶颈应该是在 work_id的生成
  * <li>sequence: The next 13 bits, represents a sequence within the same second, max for 8192/s<br><br>
  *
  * The {@link DefaultUidGenerator#parseUID(long)} is a tool method to parse the bits
@@ -48,7 +51,7 @@ import com.baidu.fsg.uid.worker.WorkerIdAssigner;
  *   1bit          28bits              22bits         13bits
  * }</pre>
  *
- * You can also specified the bits by Spring property setting.
+ * You can also specified the bits by Spring property setting. fixme 这块为什么要自定义，根据twiter的snowflake不是固定长度的？
  * <li>timeBits: default as 28
  * <li>workerBits: default as 22
  * <li>seqBits: default as 13
@@ -66,7 +69,7 @@ public class DefaultUidGenerator implements UidGenerator, InitializingBean {
     protected int workerBits = 22;
     protected int seqBits = 13;
 
-    /** Customer epoch, unit as second. For example 2016-05-20 (ms: 1463673600000)*/
+    /** Customer epoch, unit as second. For example 2016-05-20 (ms: 1463673600000) fixme 这块要按照实际情况进行配置*/
     protected String epochStr = "2016-05-20";
     protected long epochSeconds = TimeUnit.MILLISECONDS.toSeconds(1463673600000L);
 
@@ -86,7 +89,7 @@ public class DefaultUidGenerator implements UidGenerator, InitializingBean {
         // initialize bits allocator
         bitsAllocator = new BitsAllocator(timeBits, workerBits, seqBits);
 
-        // initialize worker id
+        // initialize worker id  todo 这边枯竭用完了怎么办？ 百度难道这些个workid够用吗，对小公司是没问题的
         workerId = workerIdAssigner.assignWorkerId();
         if (workerId > bitsAllocator.getMaxWorkerId()) {
             throw new RuntimeException("Worker id " + workerId + " exceeds the max " + bitsAllocator.getMaxWorkerId());
@@ -127,7 +130,7 @@ public class DefaultUidGenerator implements UidGenerator, InitializingBean {
     }
 
     /**
-     * Get UID
+     * Get UID  fixme 核心代码 生成uid
      *
      * @return UID
      * @throws UidGenerateException in the case: Clock moved backwards; Exceeds the max timestamp

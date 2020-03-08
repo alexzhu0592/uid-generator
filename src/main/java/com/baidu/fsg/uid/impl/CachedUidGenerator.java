@@ -32,6 +32,8 @@ import com.baidu.fsg.uid.buffer.RingBuffer;
 import com.baidu.fsg.uid.exception.UidGenerateException;
 
 /**
+ *
+ * fixme cache的实现是放在一个ringbuffer上，ringbuffer的实现用了一个long数组和一个标识PaddedAtomicLong数组存放是否当前位置的long数组是否可以取
  * Represents a cached implementation of {@link UidGenerator} extends
  * from {@link DefaultUidGenerator}, based on a lock free {@link RingBuffer}<p>
  * 
